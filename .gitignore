@@ -1,0 +1,15 @@
+AudioCLIP/
+test_soundscapes/
+train_sound_scapes/
+train_audio/
+train_soundscapes/
+unilm/
+whisper/
+__pycache__/
+*.pyc
+
+*.zip
+*.csv
+*.sh
+*.txt
+test*.py
