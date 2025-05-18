@@ -6,12 +6,13 @@ from transformers import PreTrainedModel, PretrainedConfig
 from transformers import AutoProcessor, AutoModelForPreTraining
 
 class wav2vecConfig(PretrainedConfig):
-    def __init__(self, n_classes, n_ffn, n_model=256, **kwargs):
+    def __init__(self, n_classes, n_ffn, n_query=1, n_model=256, **kwargs):
         super(wav2vecConfig, self).__init__()
 
         self.n_classes = n_classes
         self.n_model = n_model
         self.n_ffn = n_ffn
+        self.n_query = n_query
 
 class wav2vecClassifier(PreTrainedModel):
     def __init__(self, config):
@@ -21,24 +22,24 @@ class wav2vecClassifier(PreTrainedModel):
         self.processor = AutoProcessor.from_pretrained("facebook/wav2vec2-base")
         self.wav2vec = AutoModelForPreTraining.from_pretrained("facebook/wav2vec2-base")
 
-        self.attn = nn.MultiheadAttention(embed_dim=self.n_model, 
+        self.attn = nn.MultiheadAttention(embed_dim=self.config.n_model, 
                                           num_heads=8, 
                                           batch_first=True,
                                           dropout=0.1)
-        self.ffn = nn.Sequential(nn.Linear(self.n_model, self.n_ffn),
+        self.ffn = nn.Sequential(nn.Linear(self.config.n_model, self.config.n_ffn),
                                  nn.ReLU(),
-                                 nn.Linear(self.n_ffn, self.n_model))
+                                 nn.Linear(self.config.n_ffn, self.config.n_model))
         
-        self.query = nn.Parameter(torch.randn(1, 1, self.n_model))
-        self.q_attn = nn.MultiheadAttention(embed_dim=self.n_model, 
+        self.query = nn.Parameter(torch.randn(1, self.config.n_query, self.config.n_model))
+        self.q_attn = nn.MultiheadAttention(embed_dim=self.config.n_model, 
                                      num_heads=8, 
                                      batch_first=True,
                                      dropout=0.1)
-        self.q_ffn = nn.Sequential(nn.Linear(self.n_model, self.n_ffn),
+        self.q_ffn = nn.Sequential(nn.Linear(self.config.n_model, self.config.n_ffn),
                                  nn.ReLU(),
-                                 nn.Linear(self.n_ffn, self.n_model))
+                                 nn.Linear(self.config.n_ffn, self.config.n_model))
 
-        self.out = nn.Linear(self.n_model, self.n_classes)
+        self.out = nn.Linear(self.config.n_model, self.config.n_classes)
 
         self.init_params()
 
@@ -52,6 +53,7 @@ class wav2vecClassifier(PreTrainedModel):
     def compute_metric(self, logits, labels):
         # logits: [B, n_classes]
         # labels: [B]
+        
         loss = self.criterion(logits, labels)
 
         return loss
@@ -72,11 +74,15 @@ class wav2vecClassifier(PreTrainedModel):
         q_attn_output, _ = self.q_attn(self.query, hidden_states, hidden_states)
         q_ffn_output = self.q_ffn(q_attn_output)
 
-        out = self.out(q_ffn_output)
+        if self.config.n_query > 1:
+            # average the query output
+            q_ffn_output = torch.mean(q_ffn_output, dim=1)
+            
+        out = self.out(q_ffn_output)[:, 0]
 
         # compute loss
         loss = self.compute_metric(out, label)
-        
+
         return {'output': out, 
                 'loss': loss}
 
