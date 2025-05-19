@@ -53,4 +53,4 @@ class BirdDataset(Dataset):
         y = target_row['primary_label']
         y = torch.LongTensor([self.id_tables[y]])
         
-        return {"audio": x, "label": y}
+        return {"input_values": x, "labels": y}

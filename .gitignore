@@ -6,8 +6,9 @@ train_soundscapes/
 unilm/
 whisper/
 __pycache__/
-*.pyc
+logs/
 
+*.pyc
 *.zip
 *.csv
 *.sh
