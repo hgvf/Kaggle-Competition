@@ -5,6 +5,8 @@ class QueryAttentionClassifier(nn.Module):
     def __init__(self, n_model, n_ffn, n_head, n_query, n_classes):
         super(QueryAttentionClassifier, self).__init__()
         
+        self.n_query = n_query
+
         self.attn = nn.MultiheadAttention(embed_dim=n_model, 
                                           num_heads=n_head, 
                                           batch_first=True,
@@ -34,7 +36,7 @@ class QueryAttentionClassifier(nn.Module):
         q_attn_output, _ = self.q_attn(query, hidden_states, hidden_states)
         q_ffn_output = self.q_ffn(q_attn_output)
 
-        if self.config.n_query > 1:
+        if self.n_query > 1:
             # average the query output
             q_ffn_output = torch.mean(q_ffn_output, dim=1)
             
