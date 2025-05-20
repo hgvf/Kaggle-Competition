@@ -14,6 +14,7 @@ class wav2vecConfig(PretrainedConfig):
         self.n_model = n_model
         self.n_ffn = n_ffn
         self.n_query = n_query
+        self.n_head = n_head
 
 class wav2vecClassifier(PreTrainedModel):
     def __init__(self, config):
