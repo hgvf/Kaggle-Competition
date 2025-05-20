@@ -6,6 +6,7 @@ import torch
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from transformers import Trainer, TrainingArguments, EarlyStoppingCallback
+from sklearn.metrics import accuracy_score
 
 from loader import BirdDataset
 from wav2vec_classifier import wav2vecClassifier, wav2vecConfig
@@ -60,6 +61,11 @@ def parse_args():
     opt = parser.parse_args()
 
     return opt
+
+def compute_metrics(eval_pred):
+    predictions, labels = eval_pred
+    preds = predictions.argmax(axis=1)
+    return {"accuracy": accuracy_score(labels, preds)}
 
 def train(args):
     training_args = TrainingArguments(
@@ -119,11 +125,16 @@ def train(args):
         model=model,
         args=training_args,
         train_dataset=trainset,
+        compute_metrics=compute_metrics
     )
 
     logging.info("Starting training...")
     trainer.train(resume_from_checkpoint=args.resume_from_checkpoint)
     logging.info("Finish training...")
+
+    logging.info("Starting evaluation...")
+    trainer.predict(devset)
+    logging.info("Finish evaluation...")
 
 def main(args):
     setup_logging(args.log_dir)

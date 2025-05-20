@@ -45,7 +45,10 @@ class wav2vecClassifier(PreTrainedModel):
         # logits: [B, n_classes]
         # labels: [B]
 
-        loss = self.criterion(logits, labels)
+        if logits.size(0) != 1:
+            loss = self.criterion(logits, labels)
+        else:
+            loss = self.criterion(logits, labels.unsqueeze(0))
 
         return loss
 
