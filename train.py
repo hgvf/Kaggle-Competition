@@ -6,6 +6,7 @@ import torch
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from transformers import Trainer, TrainingArguments, EarlyStoppingCallback
+from sklearn.metrics import accuracy_score
 
 from loader import BirdDataset
 from wav2vec_classifier import wav2vecClassifier, wav2vecConfig
@@ -41,25 +42,30 @@ def parse_args():
     parser.add_argument("--fp16", type=bool, default=False)
     parser.add_argument("--train_ratio", type=float, default=0.8)
     parser.add_argument("--patience", type=int, default=5)
-    parser.add_argument("--resume_from_checkpoint", type=str, default=None)
+    parser.add_argument("--resume_from_checkpoint", type=bool, default=False)
     parser.add_argument("--report_to", type=str, default="tensorboard")
 
-    parser.add_argument("--warmup_steps", type=int, default=500)
-    parser.add_argument("--save_model_steps", type=int, default=500)
+    parser.add_argument("--warmup_steps", type=int, default=100)
+    parser.add_argument("--save_model_steps", type=int, default=100)
     parser.add_argument("--save_strategy", type=str, default="steps")
 
     parser.add_argument("--output_dir", type=str, default="./results")
     parser.add_argument("--log_dir", type=str, default="./logs")
     
-    parser.add_argument("--logging_steps", type=int, default=300)
+    parser.add_argument("--logging_steps", type=int, default=100)
     parser.add_argument("--logging_strategy", type=str, default="steps")
 
     parser.add_argument("--evaluation_strategy", type=str, default="steps")
-    parser.add_argument("--eval_steps", type=int, default=500)
+    parser.add_argument("--eval_steps", type=int, default=100)
     
     opt = parser.parse_args()
 
     return opt
+
+def compute_metrics(eval_pred):
+    predictions, labels = eval_pred
+    preds = predictions.argmax(axis=1)
+    return {"accuracy": accuracy_score(labels, preds)}
 
 def train(args):
     training_args = TrainingArguments(
@@ -74,8 +80,9 @@ def train(args):
         warmup_steps=args.warmup_steps,
         report_to=[args.report_to],
         save_strategy=args.save_strategy,
+        save_steps=args.save_model_steps,
         metric_for_best_model="loss",
-        logging_steps=args.save_model_steps,
+        logging_steps=args.logging_steps,
         logging_strategy=args.logging_strategy,
         logging_dir=args.log_dir,
         remove_unused_columns=False,
@@ -118,11 +125,16 @@ def train(args):
         model=model,
         args=training_args,
         train_dataset=trainset,
+        compute_metrics=compute_metrics
     )
 
     logging.info("Starting training...")
-    trainer.train()
+    trainer.train(resume_from_checkpoint=args.resume_from_checkpoint)
     logging.info("Finish training...")
+
+    logging.info("Starting evaluation...")
+    trainer.predict(devset)
+    logging.info("Finish evaluation...")
 
 def main(args):
     setup_logging(args.log_dir)
