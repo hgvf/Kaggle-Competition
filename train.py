@@ -9,7 +9,7 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from transformers import Trainer, TrainingArguments, EarlyStoppingCallback
+from transformers import Trainer, TrainingArguments
 from sklearn.metrics import accuracy_score
 
 from loader import BirdDataset
@@ -41,7 +41,7 @@ def parse_args():
     # Training
     parser.add_argument("--batch_size", type=int, default=4)
     parser.add_argument("--num_epochs", type=int, default=10)
-    parser.add_argument("--learning_rate", type=float, default=1e-4)
+    parser.add_argument("--learning_rate", type=float, default=1e-3)
     parser.add_argument("--gradient_accumulation_steps", type=int, default=32)
     parser.add_argument("--max_grad_norm", type=float, default=1.0)
     parser.add_argument("--fp16", type=bool, default=False)
