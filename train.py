@@ -157,9 +157,9 @@ def train(args):
         compute_metrics=compute_metrics
     )
 
-    # logging.info("Starting training...")
-    # trainer.train(resume_from_checkpoint=args.resume_from_checkpoint)
-    # logging.info("Finish training...")
+    logging.info("Starting training...")
+    trainer.train(resume_from_checkpoint=args.resume_from_checkpoint)
+    logging.info("Finish training...")
 
     logging.info("Starting evaluation...")
     
