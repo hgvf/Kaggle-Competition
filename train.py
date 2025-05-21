@@ -14,6 +14,7 @@ from sklearn.metrics import accuracy_score
 
 from loader import BirdDataset
 from wav2vec_classifier import wav2vecClassifier, wav2vecConfig
+from beats_classifier import beatsClassifier, beatsConfig
 from logger import setup_logging
 
 def parse_args():
@@ -39,6 +40,7 @@ def parse_args():
     parser.add_argument("--sample_file", type=str, default="./sample_submission.csv")
 
     # Training
+    parser.add_argument("--model_type", type=str)
     parser.add_argument("--batch_size", type=int, default=4)
     parser.add_argument("--num_epochs", type=int, default=10)
     parser.add_argument("--learning_rate", type=float, default=1e-3)
@@ -118,14 +120,26 @@ def train(args):
         fp16=args.fp16,
     )
 
-    config = wav2vecConfig(
-        n_classes=args.n_classes, 
-        n_ffn=args.n_ffn, 
-        n_model=args.n_model, 
-        n_query=args.n_query,
-    )
-    
-    model = wav2vecClassifier(config)
+    if args.model_type == 'wav2vec':
+        config = wav2vecConfig(
+            n_classes=args.n_classes, 
+            n_ffn=args.n_ffn, 
+            n_model=args.n_model, 
+            n_query=args.n_query,
+            n_head=args.n_head
+        )
+        
+        model = wav2vecClassifier(config)
+    elif args.model_type == 'beats':
+        config = beatsConfig(
+            n_classes=args.n_classes, 
+            n_ffn=args.n_ffn, 
+            n_model=args.n_model, 
+            n_query=args.n_query,
+            n_head=args.n_head
+        )
+        
+        model = beatsClassifier(config)
 
     total = sum(p.numel() for p in model.parameters())
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)

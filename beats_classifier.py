@@ -58,9 +58,9 @@ class beatsClassifier(PreTrainedModel):
         label = labels.squeeze()
 
         # (B, L, 512)
-        padding_mask = torch.zeros(audio.size(0), audio.size(1)).bool()
+        padding_mask = torch.zeros(audio.size(0), audio.size(1)).bool().to(audio.device)
         hidden_states = self.BEATs_model.extract_features(audio, padding_mask=padding_mask)[0]
-        print(hidden_states.shape)
+
         logits = self.classifier(hidden_states.unsqueeze(1))
 
         if labels is not None:
@@ -69,14 +69,3 @@ class beatsClassifier(PreTrainedModel):
         else:
             return logits
         
-config = beatsConfig(
-        n_classes=200, 
-        n_ffn=1024, 
-        n_model=527, 
-        n_query=1,
-        n_head=17
-    )
-    
-model = beatsClassifier(config)
-out = model(torch.rand(4, 480000), torch.LongTensor([1, 2, 3, 4]))
-print(out)
