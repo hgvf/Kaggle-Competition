@@ -25,7 +25,7 @@ class BirdDataset(Dataset):
             json_str = json.dumps(self.id_tables, indent=2)
 
             # 寫入檔案
-            with open(f"./{id_mapping_file}.csv", "w") as f:
+            with open(f"./{id_mapping_file}.json", "w") as f:
                 f.write(json_str)
         else:
             f = open(f"./{id_mapping_file}.json", "r")
