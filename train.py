@@ -1,11 +1,15 @@
 import argparse
 import logging
 import os
+import json
+import pandas as pd
+import numpy as np
 
 import torch
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from transformers import Trainer, TrainingArguments, EarlyStoppingCallback
+from transformers import Trainer, TrainingArguments
 from sklearn.metrics import accuracy_score
 
 from loader import BirdDataset
@@ -31,12 +35,13 @@ def parse_args():
     # Dataset
     parser.add_argument("--audio_path", type=str, default="./train_audio")
     parser.add_argument("--csv_path", type=str, default="./train.csv")
-    parser.add_argument("--id_mapping_file", type=str, default="./id_mapping.csv")
+    parser.add_argument("--id_mapping_file", type=str, default="./id_mapping.json")
+    parser.add_argument("--sample_file", type=str, default="./sample_submission.csv")
 
     # Training
     parser.add_argument("--batch_size", type=int, default=4)
     parser.add_argument("--num_epochs", type=int, default=10)
-    parser.add_argument("--learning_rate", type=float, default=1e-4)
+    parser.add_argument("--learning_rate", type=float, default=1e-3)
     parser.add_argument("--gradient_accumulation_steps", type=int, default=32)
     parser.add_argument("--max_grad_norm", type=float, default=1.0)
     parser.add_argument("--fp16", type=bool, default=False)
@@ -62,9 +67,33 @@ def parse_args():
 
     return opt
 
+def outputForSubmission(predictions, mapping_file, sample_file="sample_submission.csv"):
+    """
+    Output the predictions for submission
+    """
+
+    # Load the mapping file
+    with open(mapping_file, "r") as f:
+        id_tables = json.load(f)
+
+    # Load the sample submission file
+    sample_df = pd.read_csv(sample_file)
+    col_order = sample_df.columns.tolist()[1:]
+    col_idx = [id_tables[c] for c in col_order]
+
+    with open("submission.csv", "w") as f:
+        f.write(f"row_id,{','.join(col_order)}\n")
+        
+        for idx, pred in enumerate(predictions):
+            distribution = pred[col_idx].tolist()
+            distribution = [str(d) for d in distribution]
+            
+            f.write(f"{idx},{','.join(distribution)}\n")
+
 def compute_metrics(eval_pred):
     predictions, labels = eval_pred
     preds = predictions.argmax(axis=1)
+    
     return {"accuracy": accuracy_score(labels, preds)}
 
 def train(args):
@@ -133,8 +162,16 @@ def train(args):
     logging.info("Finish training...")
 
     logging.info("Starting evaluation...")
-    trainer.predict(devset)
+    
+    pred_output = trainer.predict(devset)
+    pred_distribution = F.softmax(torch.tensor(pred_output.predictions), dim=1)
+    
+    acc = compute_metrics((pred_distribution, pred_output.label_ids))
+
+    logging.info(f"Accuracy: {acc['accuracy']:.4f}")
     logging.info("Finish evaluation...")
+
+    return pred_distribution
 
 def main(args):
     setup_logging(args.log_dir)
@@ -144,7 +181,10 @@ def main(args):
     writer = SummaryWriter(log_dir=args.log_dir)
 
     # ----- Start training -----
-    train(args)
+    pred_output = train(args)
+
+    # ----- Submission -----
+    outputForSubmission(pred_output, args.id_mapping_file, args.sample_file)
 
 if __name__ == "__main__":
     opt = parse_args()
