@@ -99,6 +99,11 @@ def compute_metrics(eval_pred):
     return {"accuracy": accuracy_score(labels, preds)}
 
 def train(args):
+    if args.model_type == 'beats':
+        save_safetensors_opt = False
+    else:
+        save_safetensors_opt = True
+
     training_args = TrainingArguments(
         output_dir=args.output_dir,
         overwrite_output_dir=True,
@@ -118,6 +123,7 @@ def train(args):
         logging_dir=args.log_dir,
         remove_unused_columns=False,
         fp16=args.fp16,
+        save_safetensors=save_safetensors_opt,
     )
 
     if args.model_type == 'wav2vec':
