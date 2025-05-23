@@ -6,4 +6,4 @@
 
 2. DRW
     * ```Time series prediction```
-    * ```Methodology```: SA (ing)
+    * ```Methodology```: Diffusion model w/ VQ-VAE
