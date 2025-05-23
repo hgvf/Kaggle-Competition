@@ -14,3 +14,4 @@ logs/
 *.sh
 *.txt
 test*.py
+clap.py
