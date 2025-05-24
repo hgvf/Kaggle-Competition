@@ -6,4 +6,5 @@
 
 2. DRW
     * ```Time series prediction```
+    * ```Feature selection```: XGBoost
     * ```Methodology```: Diffusion model w/ VQ-VAE
