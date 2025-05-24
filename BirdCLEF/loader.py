@@ -39,18 +39,19 @@ class BirdDataset(Dataset):
         else:
             self.df = self.df.iloc[int(len(self.df) * train_ratio):]
 
+        self.filename = self.df['filename'].tolist()
+        self.label = self.df['primary_label'].tolist()
+
     def __len__(self):
         return len(self.df)
 
     def __getitem__(self, idx):
         # Get the audio file path and label
-        target_row = self.df.iloc[idx]
-
-        audio_file = target_row['filename']
+        audio_file = self.filename[idx]
         x = whisper.load_audio(os.path.join(self.audio_path, audio_file))
         x = whisper.pad_or_trim(x)
 
-        y = target_row['primary_label']
+        y = self.label[idx]
         y = torch.LongTensor([self.id_tables[y]])
         
         return {"input_values": x, "labels": y}
