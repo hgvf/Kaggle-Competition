@@ -6,6 +6,8 @@ RUN \
 apt-get update -y && \
 pip install -U openai-whisper && \
 git clone https://github.com/AndreyGuzhov/AudioCLIP.git && \
-git clone https://github.com/microsoft/unilm.git
+git clone https://github.com/microsoft/unilm.git && \
+pip install jupyter && \
+pip install xgboost
 
 CMD [ "python3" ]

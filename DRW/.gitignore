@@ -1,6 +1,10 @@
+./ipynb_checkpoints/
+
 *.zip
 *.csv
 *.parquet
 *.json
+*.txt
+*.ipynb
 
 test*.py
