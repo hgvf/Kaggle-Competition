@@ -8,3 +8,7 @@
     * ```Regression```
     * ```Feature selection```: XGBoost
     * ```Methodology```: Simple MLP, Transformer encoder
+
+3. ImageClassification_RealOrAI
+   * ```Image classification```
+   * ```Methodology```: ViT finetuning
