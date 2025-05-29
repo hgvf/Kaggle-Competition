@@ -13,5 +13,6 @@ logs/
 *.csv
 *.sh
 *.txt
+*.json
 test*.py
 clap.py

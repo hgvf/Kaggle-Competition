@@ -14,7 +14,7 @@ from sklearn.metrics import accuracy_score
 
 from loader import BirdDataset
 from wav2vec_classifier import wav2vecClassifier, wav2vecConfig
-from beats_classifier import beatsClassifier, beatsConfig
+# from beats_classifier import beatsClassifier, beatsConfig
 from logger import setup_logging
 
 def parse_args():
