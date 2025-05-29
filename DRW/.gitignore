@@ -1,4 +1,6 @@
-./ipynb_checkpoints/
+ipynb_checkpoints/
+results/
+__pycache__/
 
 *.zip
 *.csv
@@ -6,5 +8,7 @@
 *.json
 *.txt
 *.ipynb
+*.sh
 
 test*.py
+simple*.py
